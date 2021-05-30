@@ -1,67 +1,30 @@
-//const User = require("../models/User");
-import * as Yup from 'yup';
-import bcrypt from 'bcryptjs';
-import User from "../models/User.js";
+import Client from "../models/client.js";
 
-class UserController {
-    
-    // POST /users Criar um usuário
-    // errors code: 120..129
-    async create(req, res) {
-        // Validação com Yup
-        const schema = Yup.object().shape({
-            nome: Yup.string()
-                .required(),
-            email: Yup.string()
-                .email()
-                .required(),
-            senha: Yup.string()
-                .required()
-                .min(6)
-        });
-        try {
-            await schema.validate(req.body);
-        } catch(err) {
-            return res.status(400).json({
-                error: true,
-                code: 120,
-                message: err.message
-            });
-        }
-
-        const emailExiste = await User.findOne({ email: req.body.email });
-        if (emailExiste) {
-            return res.status(400).json({
-                error: true,
-                code: 121,
-                message: "Error: Este e-mail já está cadastrado!"
-            });
-        };
-
-        const user = req.body;
-        /** Criptografar a senha do usuário aqui antes de armazenar no banco de dados */
-
-        User.create(user).then((user) => {
-            return res.json(user);
-        }).catch((err) => {
-            return res.status(400).json({
-                error: true,
-                code: 122,
-                message: "Error: Usuário não foi cadastrado com sucesso"
-            });
-        });
-    }
-    
-    /**
-     * rota /me
-     */
-    // GET /me > Listar o usuário logado
-    // errors code: 110..119
-    async listMe(req, res) {
-        User.findOne({ _id: req.userID }, '_id nome email createAt updateAt').then((user) => {
+class ClientController {
+    // GET /clients > Listar clientes
+    // errors code: 100..109
+    async list(req, res) {
+        // consultar no banco os clientes
+        Client.find({}).select("-senha").then((clients) => {
             return res.json({
                 error: false,
-                user: user
+                clients: clients
+            });
+        }).catch((error) => {
+            return res.status(400).json({
+                error: true,
+                code: 100,
+                message: "Erro: Não foi possível executar a solicitação!"
+            });
+        });
+        }
+    // GET /clients/:id > Listar um cliente
+    // errors code: 110..119
+    async listOne(req, res) {
+        Client.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((client) => {
+            return res.json({
+                error: false,
+                client: client
             });
         }).catch((err) => {
             return res.status(400).json({
@@ -71,85 +34,52 @@ class UserController {
             })
         })
     }
-    
-
-    // PUT /me
-    // errors code: 130..139
-    // Atualiza o usuário logado
-    async updateMe(req, res) {
-        // Validação com Yup
-        const schema = Yup.object().shape({
-            nome: Yup.string()
-                .notOneOf(['']),
-            email: Yup.string()
-                .email()
-                .notOneOf(['']),
-            senha: Yup.string()
-                .min(6)
-                .notOneOf([''])
+    // POST /clients > Cadastrar um cliente
+    // errors code: 120..129
+    async create(req, res) {
+        Client.create(req.body).then((client) => {
+            return res.json(client);
+        }).catch((err) => {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: "Error: Cliente não foi cadastrado com sucesso"
+            });
         });
-        try {
-            await schema.validate(req.body);
-        } catch(err) {
-            return res.status(400).json({
-                error: true,
-                code: 130,
-                message: err.message
-            });
-        }
-        
-        const usuarioExiste = await User.findOne({_id: req.userID});
-
-        if(!usuarioExiste){
-            return res.status(400).json({
-                error: true,
-                code: 131,
-                message: "Erro: Usuário não encontrado!"
-            });
-        };
-        
-        if(req.body.email !== usuarioExiste.email){
-            const emailExiste = await User.findOne({email: req.body.email});
-            if(emailExiste){
-                return res.status(400).json({
-                    error: true,
-                    code: 132,
-                    message: "Erro: Este e-mail já está cadastrado!"
-                });
-            };
-        };
-
-        User.updateOne({_id: req.userID}, req.body).then(() => {
+    }
+    // PUT /clients/:id > Atualizar o cadastro de um cliente
+    // errors code: 130..139
+    async update(req, res) {
+        const client = req.body;
+        Client.updateOne({_id: req.params.id}, client).then(() => {
             return res.json({
                 error: false,
-                message: "Usuário editado com sucesso!"
+                message: "Cliente editado com sucesso!"
             });
         }).catch((err) => {
             return res.status(400).json({
                 error: true,
-                code: 133,
-                message: "Erro: Usuário não foi editado com sucesso!"
+                code: 130,
+                message: "Erro: O cadastro do cliente não foi atualizado!"
             });
         });
     }
-    // DELETE /me
+    // DELETE /clients/:id > Deletar um cliente
     // errors code: 140..149
-    // Deleta o usuário logado
-    async deleteMe(req, res) {
-        User.deleteOne({ _id: req.userID }).then(() => {
+    async delete(req, res) {
+        Client.deleteOne({ _id: req.params.id }).then(() => {
             return res.json({
                 error: false,
-                message: "Usuário apagado com sucesso!"
+                message: "Cliente apagado com sucesso!"
             });
         }).catch((err) => {
             return res.status(400).json({
                 error: true,
                 code: 140,
-                message: "Error: Usuário não foi apagado com sucesso!"
+                message: "Error: Cliente não foi apagado com sucesso!"
             });
         });
     }
 }
 
-//module.exports = new UserController();
-export default new UserController();
+export default new ClientController();
