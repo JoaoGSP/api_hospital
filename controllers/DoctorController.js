@@ -52,6 +52,7 @@ class DoctorController {
         Doctor.create(req.body).then((doctor) => {
             return res.json(doctor);
         }).catch((err) => {
+            console.log(err)
             return res.status(400).json({
                 error: true,
                 code: 120,

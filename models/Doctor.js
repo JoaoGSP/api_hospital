@@ -5,14 +5,15 @@ import User from "./User.js";
 export default User.discriminator('Doctor', new mongoose.Schema({
   numCRM: {
     type: Number,
-    required: true
+    required: false
   },
   especialidade: {
       type: String,
-      required: true
+      required: false
   },
   senha: {
     type: String,
-    required: true
+    required: true,
+    select: false
   }
 }));

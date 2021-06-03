@@ -1,9 +1,8 @@
 
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 import User from "../models/User.js";
-import authConfig from "../config/auth.js";
 
 class LoginController {
     /*
@@ -25,8 +24,8 @@ class LoginController {
                 message: "Erro: Usuário não encontrado!"
             });
         }
-
-        if( !(await bcrypt.compare(senha, userExiste.senha)) ) {
+        
+        if( !bcrypt.compareSync(senha, userExiste.senha) ) {
             return res.status(401).json({
                 error: true,
                 code: 151,
@@ -40,8 +39,8 @@ class LoginController {
                 nome: userExiste.nome,
                 email
             },
-            token: jwt.sign({id: userExiste._id},
-                authConfig.secret, {expiresIn: authConfig.expiresIn})
+            token: jwt.sign({id: userExiste._id, role: userExiste._role},
+                process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN})
         });
 
     }

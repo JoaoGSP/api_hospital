@@ -6,7 +6,7 @@ class AttendantController {
     // errors code: 100..109
     async list(req, res) {
         // consultar no banco os clientes
-        Attendant.find({}).select("-senha").then((attendant) => {
+        Attendant.find({}).select("-senha").then((attendants) => {
             return res.json({
                 error: false,
                 attendants: attendants
@@ -18,7 +18,7 @@ class AttendantController {
                 message: "Erro: Não foi possível executar a solicitação!"
             });
         });
-        }
+    }
     // GET /attendants/:id > Listar um atendente
     // errors code: 110..119
     async listOne(req, res) {

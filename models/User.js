@@ -52,4 +52,8 @@ const UserSchema = new mongoose.Schema({
     discriminatorKey: '_role'
 });
 
-export default mongoose.model('User', UserSchema);
+const UserModel = mongoose.model('User', UserSchema);
+
+UserModel.discriminator('Admin', new mongoose.Schema({ senha: String }));
+
+export default UserModel;
