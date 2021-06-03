@@ -1,9 +1,6 @@
-//const express = require("express");
-//const routes = require("./routes");
 import express from "express";
 import routes from "../routes.js";
 
-//reqire("./database/mongodb.js");
 import "../database/connection.js";
 
 class App {
@@ -20,5 +17,4 @@ class App {
   }
 }
 
-//module.exports = new App().app;
 export default new App().app;

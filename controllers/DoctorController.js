@@ -1,5 +1,5 @@
-//const Doctor = require("../models/Doctor");
-import Doctor from "../models/doctor.js";
+import Doctor from "../models/Doctor.js";
+import bcrypt from 'bcrypt';
 
 class DoctorController {
     // GET /doctors > Listar médicos
@@ -38,6 +38,17 @@ class DoctorController {
     // POST /doctors > Cadastrar um médico
     // errors code: 120..129
     async create(req, res) {
+        const emailExiste = await Doctor.findOne({ email: req.body.email });
+        if (emailExiste) {
+            return res.status(400).json({
+                error: true,
+                code: 121,
+                message: "Error: Este e-mail já está cadastrado!"
+            });
+        };
+
+        req.body.senha = await bcrypt.hash(req.body.senha, 7);
+
         Doctor.create(req.body).then((doctor) => {
             return res.json(doctor);
         }).catch((err) => {
@@ -51,7 +62,31 @@ class DoctorController {
     // PUT /doctors/:id > Atualizar o cadastro de um médico
     // errors code: 130..139
     async update(req, res) {
-        const doctor = req.body;
+        const medicoExiste = await Doctor.findOne({_id: req.params.id});
+
+        if(!medicoExiste){
+            return res.status(400).json({
+                error: true,
+                code: 131,
+                message: "Erro: Médico não encontrado!"
+            });
+        };
+
+        if(req.body.email !== medicoExiste.email){
+            const emailExiste = await Doctor.findOne({email: req.body.email});
+            if(emailExiste){
+                return res.status(400).json({
+                    error: true,
+                    code: 132,
+                    message: "Erro: Este e-mail já está cadastrado!"
+                });
+            };
+        };
+
+        if(req.body.senha !== undefined) {
+            req.body.senha = await bcrypt.hash(req.body.senha, 7);
+        }
+
         Doctor.updateOne({_id: req.params.id}, doctor).then(() => {
             return res.json({
                 error: false,

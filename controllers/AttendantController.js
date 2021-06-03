@@ -1,4 +1,5 @@
-import Attendant from "../models/attendant.js";
+import Attendant from "../models/Attendant.js";
+import bcrypt from 'bcrypt';
 
 class AttendantController {
     // GET /attendants > Listar atendentes
@@ -37,6 +38,17 @@ class AttendantController {
     // POST /attendants > Cadastrar um atedente
     // errors code: 120..129
     async create(req, res) {
+        const emailExiste = await Attendant.findOne({ email: req.body.email });
+        if (emailExiste) {
+            return res.status(400).json({
+                error: true,
+                code: 121,
+                message: "Error: Este e-mail já está cadastrado!"
+            });
+        };
+
+        req.body.senha = await bcrypt.hash(req.body.senha, 7);
+
         Attendant.create(req.body).then((attendant) => {
             return res.json(attendant);
         }).catch((err) => {
@@ -50,7 +62,31 @@ class AttendantController {
     // PUT /attendants/:id > Atualizar o cadastro de um atendente
     // errors code: 130..139
     async update(req, res) {
-        const attendant = req.body;
+        const atendenteExiste = await Attendant.findOne({_id: req.params.id});
+
+        if(!atendenteExiste){
+            return res.status(400).json({
+                error: true,
+                code: 131,
+                message: "Erro: Atendente não encontrado!"
+            });
+        };
+
+        if(req.body.email !== atendenteExiste.email){
+            const emailExiste = await Client.findOne({email: req.body.email});
+            if(emailExiste){
+                return res.status(400).json({
+                    error: true,
+                    code: 132,
+                    message: "Erro: Este e-mail já está cadastrado!"
+                });
+            };
+        };
+
+        if(req.body.senha !== undefined) {
+            req.body.senha = await bcrypt.hash(req.body.senha, 7);
+        }
+
         Attendant.updateOne({_id: req.params.id}, attendant).then(() => {
             return res.json({
                 error: false,

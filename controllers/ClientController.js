@@ -1,4 +1,4 @@
-import Client from "../models/client.js";
+import Client from "../models/Client.js";
 
 class ClientController {
     // GET /clients > Listar clientes
@@ -37,20 +37,50 @@ class ClientController {
     // POST /clients > Cadastrar um cliente
     // errors code: 120..129
     async create(req, res) {
-        Clients.create(req.body).then((clients) => {
-            return res.json(clients);
+        const emailExiste = await Client.findOne({ email: req.body.email });
+        if (emailExiste) {
+            return res.status(400).json({
+                error: true,
+                code: 121,
+                message: "Error: Este e-mail já está cadastrado!"
+            });
+        };
+
+        Client.create(req.body).then((client) => {
+            return res.json(client);
         }).catch((err) => {
             return res.status(400).json({
                 error: true,
                 code: 120,
-                message: "Error: Cliente não foi cadastrado com sucesso"
+                message: "Error: Usuário não cadastrado!"
             });
         });
     }
     // PUT /clients/:id > Atualizar o cadastro de um cliente
     // errors code: 130..139
     async update(req, res) {
-        const client = req.body;
+        
+        const clienteExiste = await Client.findOne({_id: req.params.id});
+
+        if(!clienteExiste){
+            return res.status(400).json({
+                error: true,
+                code: 131,
+                message: "Erro: Cliente não encontrado!"
+            });
+        };
+
+        if(req.body.email !== clienteExiste.email){
+            const emailExiste = await Client.findOne({email: req.body.email});
+            if(emailExiste){
+                return res.status(400).json({
+                    error: true,
+                    code: 132,
+                    message: "Erro: Este e-mail já está cadastrado!"
+                });
+            };
+        };
+
         Client.updateOne({_id: req.params.id}, client).then(() => {
             return res.json({
                 error: false,

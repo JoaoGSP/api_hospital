@@ -1,13 +1,22 @@
-//const { Router } = require("express");
 import { Router } from "express";
-import ClientController from "../controllers/ClientController.js";
-import DoctorController from "../controllers/DoctorController.js";
-import AttendantController from "../controllers/AttendantController.js";
+import ClientController from "./controllers/ClientController.js";
+import DoctorController from "./controllers/DoctorController.js";
+import AttendantController from "./controllers/AttendantController.js";
+
+import bcrypt from 'bcrypt';
 
 const routes = new Router();
 
 // rotas
 routes.get("/", async (req, res) => {
+  /*
+  import User from "./models/User.js";
+  import mongoose from 'mongoose';
+  await User.discriminator('Admin', new mongoose.Schema({ senha: String })).create({
+      email: "admin@sistema.com",
+      senha: bcrypt.hashSync("12345678", 7)
+  });
+  */
   res.send("Bem vindo ao Sistema!");
 });
 
