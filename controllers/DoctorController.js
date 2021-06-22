@@ -1,12 +1,12 @@
-import Doctor from "../models/Doctor.js";
 import bcrypt from 'bcrypt';
+import { MedicoModel } from '../models/User.js';
 
 class DoctorController {
     // GET /doctors > Listar médicos
     // errors code: 100..109
     async list(req, res) {
         // consultar no banco os médicos
-        Doctor.find({}).select("-senha").then((doctors) => {
+        MedicoModel.find({}).select("-senha").then((doctors) => {
             return res.json({
                 error: false,
                 doctors: doctors
@@ -22,7 +22,7 @@ class DoctorController {
     // GET /doctors/:id > Listar um médico
     // errors code: 110..119
     async listOne(req, res) {
-        Doctor.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((doctor) => {
+        MedicoModel.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((doctor) => {
             return res.json({
                 error: false,
                 doctor: doctor
@@ -38,7 +38,7 @@ class DoctorController {
     // POST /doctors > Cadastrar um médico
     // errors code: 120..129
     async create(req, res) {
-        const emailExiste = await Doctor.findOne({ email: req.body.email });
+        const emailExiste = await MedicoModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,
@@ -49,7 +49,7 @@ class DoctorController {
 
         req.body.senha = await bcrypt.hash(req.body.senha, 7);
 
-        Doctor.create(req.body).then((doctor) => {
+        MedicoModel.create(req.body).then((doctor) => {
             return res.json(doctor);
         }).catch((err) => {
             console.log(err)
@@ -63,7 +63,7 @@ class DoctorController {
     // PUT /doctors/:id > Atualizar o cadastro de um médico
     // errors code: 130..139
     async update(req, res) {
-        const medicoExiste = await Doctor.findOne({_id: req.params.id});
+        const medicoExiste = await MedicoModel.findOne({_id: req.params.id});
 
         if(!medicoExiste){
             return res.status(400).json({
@@ -74,7 +74,7 @@ class DoctorController {
         };
 
         if(req.body.email !== medicoExiste.email){
-            const emailExiste = await Doctor.findOne({email: req.body.email});
+            const emailExiste = await MedicoModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
                     error: true,
@@ -88,7 +88,7 @@ class DoctorController {
             req.body.senha = await bcrypt.hash(req.body.senha, 7);
         }
 
-        Doctor.updateOne({_id: req.params.id}, doctor).then(() => {
+        MedicoModel.updateOne({_id: req.params.id}, doctor).then(() => {
             return res.json({
                 error: false,
                 message: "Médico editado com sucesso!"
@@ -104,7 +104,7 @@ class DoctorController {
     // DELETE /doctors/:id > Deletar um médico
     // errors code: 140..149
     async delete(req, res) {
-        Doctor.deleteOne({ _id: req.params.id }).then(() => {
+        MedicoModel.deleteOne({ _id: req.params.id }).then(() => {
             return res.json({
                 error: false,
                 message: "Médico apagado com sucesso!"

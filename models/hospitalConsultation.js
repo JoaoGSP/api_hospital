@@ -2,49 +2,12 @@ import mongoose from 'mongoose';
 //import Client from './Client.js';
 //import Doctor from './Doctor.js';
 
-import User from "./User.js";
+//import User from "./User.js";
 
-export default User.discriminator('HospitalConsultation', new mongoose.Schema({
-    paciente: {
-        nome: {
-            type: String,
-            required: false
-          },
-          sexo: {
-            type: String,
-            required: false
-          },
-          data_nasc: {
-            type: Number,
-            required: false
-          },
-          cpf: {
-            type: String,
-            required: false
-          },
-    },
-    medico: {
-        nome: {
-            type: String,
-            required: false
-          },
-          sexo: {
-            type: String,
-            required: false
-          },
-          data_nasc: {
-            type: Number,
-            required: false
-          },
-          cpf: {
-            type: String,
-            required: false
-          },
-          especialidade: {
-            type: String,
-            required: false
-        },
-    },
+const ConsultationSchema = new mongoose.Schema({
+    paciente: {type: mongoose.Schema.Types.ObjectId, ref: "Client"},
+    medico: {type: mongoose.Schema.Types.ObjectId, ref: "Doctor"},
+    data_hora: Date,
     categoria: {
         type: String,
         required: false
@@ -53,4 +16,6 @@ export default User.discriminator('HospitalConsultation', new mongoose.Schema({
         type: String,
         required: false
     }
-}));
+});
+
+export default mongoose.model ('Consultation', ConsultationSchema)

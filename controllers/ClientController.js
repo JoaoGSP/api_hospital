@@ -1,11 +1,11 @@
-import Client from "../models/Client.js";
+import { PacienteModel } from "../models/User.js";
 
 class ClientController {
     // GET /clients > Listar clientes
     // errors code: 100..109
     async list(req, res) {
         // consultar no banco os clientes
-        Client.find({}).select("-senha").then((clients) => {
+        PacienteModel.find({}).select("-senha").then((clients) => {
             return res.json({
                 error: false,
                 clients: clients
@@ -21,7 +21,7 @@ class ClientController {
     // GET /clients/:id > Listar um cliente
     // errors code: 110..119
     async listOne(req, res) {
-        Client.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((client) => {
+        PacienteModel.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((client) => {
             return res.json({
                 error: false,
                 client: client
@@ -37,7 +37,7 @@ class ClientController {
     // POST /clients > Cadastrar um cliente
     // errors code: 120..129
     async create(req, res) {
-        const emailExiste = await Client.findOne({ email: req.body.email });
+        const emailExiste = await PacienteModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,
@@ -46,7 +46,7 @@ class ClientController {
             });
         };
 
-        Client.create(req.body).then((client) => {
+        PacienteModel.create(req.body).then((client) => {
             return res.json(client);
         }).catch((err) => {
             return res.status(400).json({
@@ -60,7 +60,7 @@ class ClientController {
     // errors code: 130..139
     async update(req, res) {
         
-        const clienteExiste = await Client.findOne({_id: req.params.id});
+        const clienteExiste = await PacienteModel.findOne({_id: req.params.id});
 
         if(!clienteExiste){
             return res.status(400).json({
@@ -71,7 +71,7 @@ class ClientController {
         };
 
         if(req.body.email !== clienteExiste.email){
-            const emailExiste = await Client.findOne({email: req.body.email});
+            const emailExiste = await PacienteModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
                     error: true,
@@ -81,7 +81,7 @@ class ClientController {
             };
         };
 
-        Client.updateOne({_id: req.params.id}, client).then(() => {
+        PacienteModel.updateOne({_id: req.params.id}, client).then(() => {
             return res.json({
                 error: false,
                 message: "Cliente editado com sucesso!"
@@ -97,7 +97,7 @@ class ClientController {
     // DELETE /clients/:id > Deletar um cliente
     // errors code: 140..149
     async delete(req, res) {
-        Client.deleteOne({ _id: req.params.id }).then(() => {
+        PacienteModel.deleteOne({ _id: req.params.id }).then(() => {
             return res.json({
                 error: false,
                 message: "Cliente apagado com sucesso!"

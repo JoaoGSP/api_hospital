@@ -1,11 +1,14 @@
 import { Router } from "express";
 
+
 import ClientController from "./controllers/ClientController.js";
 import DoctorController from "./controllers/DoctorController.js";
 import AttendantController from "./controllers/AttendantController.js";
 import LoginController from "./controllers/LoginController.js";
-import ConsultationController from "./controllers/ConsultationController.js";
+//import ConsultationController from "./controllers/ConsultationController.js";
 import auth from "./middleware/auth.js";
+import UserModel from "./models/User.js";
+import Consulta from "./models/hospitalConsultation.js"
 
 const routes = new Router();
 
@@ -22,9 +25,44 @@ await User.discriminator('Admin', new mongoose.Schema({ senha: String })).create
   res.send("Bem vindo ao Sistema!");
 });
 
+routes.get("/users", async (req, res) => {
+    
+    const {_id, _role, nome, sexo, data_nasc, cpf} = req.query;
+
+    UserModel.find(JSON.parse(JSON.stringify({_id, _role, nome, sexo, data_nasc, cpf}))).then((users)=>{
+        res.json({users})
+    });
+})
+
 
 routes.post("/login", LoginController.login)
 
+//Criação de consultas pelo médico
+routes.post("/consultas", async (req, res) =>{
+    req.body.medico = "60b92e602eefff1cbe997f67";
+    Consulta.create(req.body).then(consulta =>{
+        return res.json({
+            consulta
+        })
+    })
+})
+//Edição de consultas pelo atendente
+routes.put("/consultas/:id", async (req, res) =>{
+    Consulta.updateOne({_id: req.params.id}, req.body).then(()=>{
+        return res.json({
+            erro: false,
+            message: "Consulta atualizada com sucesso!"
+        })
+    })
+})
+
+routes.get("/consultas", async(req, res) =>{
+    Consulta.find().populate("paciente").populate({path: "medico", select: "-senha"}).then(consultas => {
+        return res.json({
+            consultas
+        })
+    })
+})
 
 /* Bloco de controle de agentes do sistema */
 
@@ -69,6 +107,7 @@ routes.delete("/attendants/:id", auth(["Admin"]), AttendantController.delete)
 //GET /profile
 /* Bloco de funcionalidades do sistema */
 
+/*
 //Cadastro e controle de consultas
 //GET /consultas > Listas consultas
 routes.get("/consultas", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.list)
@@ -83,6 +122,7 @@ routes.delete("/consultas/:id", auth(["Admin", "Attendant", "Doctor"]), Consulta
 
 /** rotas - controle de erro */
 routes.use((req,res) => res.sendStatus(404));
+
 
 // 500 - Internal Server Error
 routes.use((err, req, res, next) => {

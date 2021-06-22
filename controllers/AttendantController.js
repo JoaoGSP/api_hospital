@@ -1,4 +1,4 @@
-import Attendant from "../models/Attendant.js";
+import { AtendenteModel } from "../models/User.js";
 import bcrypt from 'bcrypt';
 
 class AttendantController {
@@ -6,7 +6,7 @@ class AttendantController {
     // errors code: 100..109
     async list(req, res) {
         // consultar no banco os clientes
-        Attendant.find({}).select("-senha").then((attendants) => {
+        AtendenteModel.find({}).select("-senha").then((attendants) => {
             return res.json({
                 error: false,
                 attendants: attendants
@@ -22,7 +22,7 @@ class AttendantController {
     // GET /attendants/:id > Listar um atendente
     // errors code: 110..119
     async listOne(req, res) {
-        Attendant.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((attendant) => {
+        AtendenteModel.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((attendant) => {
             return res.json({
                 error: false,
                 attendant: attendant
@@ -38,7 +38,7 @@ class AttendantController {
     // POST /attendants > Cadastrar um atedente
     // errors code: 120..129
     async create(req, res) {
-        const emailExiste = await Attendant.findOne({ email: req.body.email });
+        const emailExiste = await AtendenteModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,
@@ -49,7 +49,7 @@ class AttendantController {
 
         req.body.senha = await bcrypt.hash(req.body.senha, 7);
 
-        Attendant.create(req.body).then((attendant) => {
+        AtendenteModel.create(req.body).then((attendant) => {
             return res.json(attendant);
         }).catch((err) => {
             return res.status(400).json({
@@ -62,7 +62,7 @@ class AttendantController {
     // PUT /attendants/:id > Atualizar o cadastro de um atendente
     // errors code: 130..139
     async update(req, res) {
-        const atendenteExiste = await Attendant.findOne({_id: req.params.id});
+        const atendenteExiste = await AtendenteModel.findOne({_id: req.params.id});
 
         if(!atendenteExiste){
             return res.status(400).json({
@@ -87,7 +87,7 @@ class AttendantController {
             req.body.senha = await bcrypt.hash(req.body.senha, 7);
         }
 
-        Attendant.updateOne({_id: req.params.id}, attendant).then(() => {
+        AtendenteModel.updateOne({_id: req.params.id}, attendant).then(() => {
             return res.json({
                 error: false,
                 message: "Atendente editado com sucesso!"
@@ -103,7 +103,7 @@ class AttendantController {
     // DELETE /attendants/:id > Deletar um atendente
     // errors code: 140..149
     async delete(req, res) {
-        Attendant.deleteOne({ _id: req.params.id }).then(() => {
+        AtendenteModel.deleteOne({ _id: req.params.id }).then(() => {
             return res.json({
                 error: false,
                 message: "Atendete apagado com sucesso!"
