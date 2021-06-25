@@ -5,27 +5,25 @@ import ClientController from "./controllers/ClientController.js";
 import DoctorController from "./controllers/DoctorController.js";
 import AttendantController from "./controllers/AttendantController.js";
 import LoginController from "./controllers/LoginController.js";
-//import ConsultationController from "./controllers/ConsultationController.js";
+import ConsultationController from "./controllers/ConsultationController.js";
 import auth from "./middleware/auth.js";
 import UserModel from "./models/User.js";
-import Consulta from "./models/hospitalConsultation.js"
+//import Consulta from "./models/hospitalConsultation.js"
+//import mongoose from "mongoose";
 
 const routes = new Router();
 
-// rotas
+//Rotas
 routes.get("/", async (req, res) => {
-/*
-import User from "./models/User.js";
-import mongoose from 'mongoose';
-await User.discriminator('Admin', new mongoose.Schema({ senha: String })).create({
-    email: "admin@sistema.com",
-    senha: bcrypt.hashSync("12345678", 7)
-});
-*/  
+    /*await UserModel.discriminator('Admin', new mongoose.Schema({ senha: String })).create({
+        email: "admin@sistema.com",
+        senha: bcrypt.hashSync("*****", 7)
+    });*/
   res.send("Bem vindo ao Sistema!");
 });
 
-routes.get("/users", async (req, res) => {
+//Listar todos os úsuarios cadastrados no sistema (Uso do Admin)
+routes.get("/users", auth(["Admin"]), async (req, res) => {
     
     const {_id, _role, nome, sexo, data_nasc, cpf} = req.query;
 
@@ -34,35 +32,18 @@ routes.get("/users", async (req, res) => {
     });
 })
 
-
+//Login no Sistema
 routes.post("/login", LoginController.login)
 
+//Listar todas as consultas
+routes.get("/consultas/teste", ConsultationController.list);
+//listar uma consulta
+routes.get("/consutas", ConsultationController.listOne)
 //Criação de consultas pelo médico
-routes.post("/consultas", async (req, res) =>{
-    req.body.medico = "60b92e602eefff1cbe997f67";
-    Consulta.create(req.body).then(consulta =>{
-        return res.json({
-            consulta
-        })
-    })
-})
+routes.post("/consultas", auth(["Doctor"]), ConsultationController.create)
 //Edição de consultas pelo atendente
-routes.put("/consultas/:id", async (req, res) =>{
-    Consulta.updateOne({_id: req.params.id}, req.body).then(()=>{
-        return res.json({
-            erro: false,
-            message: "Consulta atualizada com sucesso!"
-        })
-    })
-})
+routes.put("/consultas/:id", ConsultationController.update)
 
-routes.get("/consultas", async(req, res) =>{
-    Consulta.find().populate("paciente").populate({path: "medico", select: "-senha"}).then(consultas => {
-        return res.json({
-            consultas
-        })
-    })
-})
 
 /* Bloco de controle de agentes do sistema */
 

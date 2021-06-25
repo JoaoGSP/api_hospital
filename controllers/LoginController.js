@@ -24,7 +24,7 @@ class LoginController {
                 message: "Erro: Usuário não encontrado!"
             });
         }
-        console.log(userExiste)
+
         if( !bcrypt.compareSync(senha, userExiste.senha) ) {
             return res.status(401).json({
                 error: true,
