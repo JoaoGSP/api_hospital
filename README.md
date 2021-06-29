@@ -17,3 +17,6 @@ npm install --save bcrypt
 npm install --save jsonwebtoken
 
 npm install -S yup
+
+Verificar qual modelo esta sendo utilizado para verificar se o email existe
+Criar rotas de perfil para acessos pessoais

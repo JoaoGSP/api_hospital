@@ -10,16 +10,16 @@ const UserSchema = new mongoose.Schema({
     required: false
   },
   data_nasc: {
-    type: Number,
+    type: Date,
     required: false
   },
   cpf: {
-    type: String,
+    type: Number,
     required: false
   },  
   endereço: {
     cep: {
-        type: String,
+        type: Number,
         required: false
     },
     logradouro: {
@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema({
         required: false
     },
     numero: {
-        type: String,
+        type: Number,
         required: false
     },
     complemento: String,

@@ -1,5 +1,6 @@
+import UserModel, { MedicoModel } from '../models/User.js';
 import bcrypt from 'bcrypt';
-import { MedicoModel } from '../models/User.js';
+import * as yup from 'yup';
 
 class DoctorController {
     // GET /doctors > Listar médicos
@@ -11,7 +12,7 @@ class DoctorController {
                 error: false,
                 doctors: doctors
             });
-        }).catch((error) => {
+        }).catch((err) => {
             return res.status(400).json({
                 error: true,
                 code: 100,
@@ -19,13 +20,13 @@ class DoctorController {
             });
         });
         }
-    // GET /doctors/:id > Listar um médico
+    // GET /doctors/:did > Listar um médico
     // errors code: 110..119
     async listOne(req, res) {
-        MedicoModel.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((doctor) => {
+        MedicoModel.findOne({ _id: req.params.did }, '_id nome email especialidade numCRM createAt updateAt').then((doctor) => {
             return res.json({
                 error: false,
-                doctor: doctor
+                doctor
             });
         }).catch((err) => {
             return res.status(400).json({
@@ -38,6 +39,52 @@ class DoctorController {
     // POST /doctors > Cadastrar um médico
     // errors code: 120..129
     async create(req, res) {
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2, "Tamanho inválido"),
+            sexo: yup.string()
+                .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                //.min()
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11, "O campo deve conter 11 digitos"),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8, "O campo deve conter 8 digitos"),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .max(5, "O campo não pode receber mais de 5 digitos"),
+                complemento: yup.string()
+                    .min(3, "Tamanho inválido"),
+                cidade: yup.string()
+                    .min(3, "Tamanho inválido"),
+                estado: yup.string()
+                    .min(2, "Tamanho inválido")
+            }),
+            telefone: yup.string()
+                .length(11, "Tamanho inválido"),            
+            email: yup.string()
+                .email("Insira um email válido no formato: usuario@email.com"),
+            numCRM: yup.string()
+                .min(5),
+            ecpecialidade: yup.string(),
+            senha: yup.string()
+                .matches(/^[0-9]+$/, "A senha deve conter apenas valores numéricos")
+                .length(6, "A senha deve ter exatamente 6 dígitos")
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
+
         const emailExiste = await MedicoModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
@@ -63,7 +110,53 @@ class DoctorController {
     // PUT /doctors/:id > Atualizar o cadastro de um médico
     // errors code: 130..139
     async update(req, res) {
-        const medicoExiste = await MedicoModel.findOne({_id: req.params.id});
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2, "Tamanho inválido"),
+            sexo: yup.string()                
+               .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                .min(19100101)
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11, "O campo deve conter 11 digitos"),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8, "O campo deve conter 8 digitos"),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .max(5, "O campo não pode receber mais de 5 digitos"),
+                complemento: yup.string()
+                    .min(3, "Tamanho inválido"),
+                cidade: yup.string()
+                    .min(3, "Tamanho inválido"),
+                estado: yup.string()
+                    .min(2, "Tamanho inválido")
+            }),
+            telefone: yup.string()
+                .length(11, "Tamanho inválido"),            
+            email: yup.string()
+                .email("Insira um email válido no formato: usuario@email.com"),
+            numCRM: yup.string()
+                .length(),
+            ecpecialidade: yup.string(),
+            senha: yup.string()
+                .matches(/^[0-9]+$/, "A senha deve conter apenas valores numéricos")
+                .length(6, "A senha deve ter exatamente 6 dígitos")
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
+
+        const medicoExiste = await MedicoModel.findOne({_id: req.params.did});
 
         if(!medicoExiste){
             return res.status(400).json({
@@ -73,8 +166,8 @@ class DoctorController {
             });
         };
 
-        if(req.body.email !== medicoExiste.email){
-            const emailExiste = await MedicoModel.findOne({email: req.body.email});
+        if(req.body.email == medicoExiste.email){
+            const emailExiste = await UserModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
                     error: true,
@@ -88,7 +181,7 @@ class DoctorController {
             req.body.senha = await bcrypt.hash(req.body.senha, 7);
         }
 
-        MedicoModel.updateOne({_id: req.params.id}, doctor).then(() => {
+        MedicoModel.updateOne({_id: req.params.did}, doctor).then(() => {
             return res.json({
                 error: false,
                 message: "Médico editado com sucesso!"
@@ -104,7 +197,7 @@ class DoctorController {
     // DELETE /doctors/:id > Deletar um médico
     // errors code: 140..149
     async delete(req, res) {
-        MedicoModel.deleteOne({ _id: req.params.id }).then(() => {
+        MedicoModel.deleteOne({ _id: req.params.did }).then(() => {
             return res.json({
                 error: false,
                 message: "Médico apagado com sucesso!"
@@ -119,5 +212,4 @@ class DoctorController {
     }
 }
 
-//module.exports = new DoctorController();
 export default new DoctorController();

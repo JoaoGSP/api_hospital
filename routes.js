@@ -1,15 +1,15 @@
 import { Router } from "express";
 
-
+//import bcrypt from "bcrypt"
+//import mongoose from "mongoose";
 import ClientController from "./controllers/ClientController.js";
 import DoctorController from "./controllers/DoctorController.js";
 import AttendantController from "./controllers/AttendantController.js";
 import LoginController from "./controllers/LoginController.js";
 import ConsultationController from "./controllers/ConsultationController.js";
-import auth from "./middleware/auth.js";
+
 import UserModel from "./models/User.js";
-//import Consulta from "./models/hospitalConsultation.js"
-//import mongoose from "mongoose";
+import auth from "./middleware/auth.js";
 
 const routes = new Router();
 
@@ -17,10 +17,13 @@ const routes = new Router();
 routes.get("/", async (req, res) => {
     /*await UserModel.discriminator('Admin', new mongoose.Schema({ senha: String })).create({
         email: "admin@sistema.com",
-        senha: bcrypt.hashSync("*****", 7)
+        senha: bcrypt.hashSync("******", 7)
     });*/
   res.send("Bem vindo ao Sistema!");
 });
+
+//Login no Sistema
+routes.post("/login", LoginController.login)
 
 //Listar todos os úsuarios cadastrados no sistema (Uso do Admin)
 routes.get("/users", auth(["Admin"]), async (req, res) => {
@@ -32,17 +35,40 @@ routes.get("/users", auth(["Admin"]), async (req, res) => {
     });
 })
 
-//Login no Sistema
-routes.post("/login", LoginController.login)
+routes.get("/users/:id", async (req, res)=>{
+    try{
+        const user = await UserModel.findById(req.params.id)
+        user.set(req.body)
+        await user.save()
+
+        await UserModel.updateOne({_id: req.params.id}, req.body, {runValidators: true})
+        res.status(200).json({erro:false, message:"Usuário atualizado!"})
+    }catch(err){
+        if (err.name === "ValidationError") {
+            return res.status(400).json({
+                error: true,
+                message: err.message,
+                ValidationError: err.errors
+            });
+        }
+
+        return res.status(400).json({
+            error: true,
+            message: "Erro ao executar a solitação!"
+        });
+    }
+})
 
 //Listar todas as consultas
-routes.get("/consultas/teste", ConsultationController.list);
+routes.get("/consultas", auth(["Admin", "Attendant"]), ConsultationController.list);
 //listar uma consulta
-routes.get("/consutas", ConsultationController.listOne)
+routes.get("/consultas/:cid", auth(["Admin", "Attendant"]), ConsultationController.listOne)
 //Criação de consultas pelo médico
 routes.post("/consultas", auth(["Doctor"]), ConsultationController.create)
 //Edição de consultas pelo atendente
-routes.put("/consultas/:id", ConsultationController.update)
+routes.put("/consultas/:cid", auth(["Attendant", "Doctor"]),ConsultationController.update)
+//Deleção de consultas (Uso do admin)
+routes.delete("/consultas/:cid", auth(["Admin"]), ConsultationController.delete)
 
 
 /* Bloco de controle de agentes do sistema */
@@ -51,55 +77,37 @@ routes.put("/consultas/:id", ConsultationController.update)
 // GET /clients > Listar clientes
 routes.get("/clients", auth(["Admin", "Attendant"]), ClientController.list)
 // GET /clients/:id > Listar um cliente
-routes.get("/clients/:id", auth(["Admin", "Attendant"]), ClientController.listOne)
+routes.get("/clients/:pid", auth(["Admin", "Attendant"]), ClientController.listOne)
 // POST /clients > Cadastrar um cliente
 routes.post("/clients", auth(["Admin", "Attendant"]), ClientController.create)
 // PUT /clients/:id > Atualizar o cadastro de um cliente
-routes.put("/clients", auth(["Admin", "Attendant"]), ClientController.update)
+routes.put("/clients/:pid", auth(["Admin", "Attendant"]), ClientController.update)
 // DELETE /clients/:id > Deletar um cliente
-routes.delete("/clients/:id", auth(["Admin", "Attendant"]), ClientController.delete)
+routes.delete("/clients/:pid", auth(["Admin", "Attendant"]), ClientController.delete)
 
 //Cadastro e controle de médicos
 // GET /doctors > Listar médicos
 routes.get("/doctors", auth(["Admin", "Attendant"]), DoctorController.list)
 // GET /doctors/:id > Listar um médico
-routes.get("/doctors/:id", auth(["Admin", "Attendant"]), DoctorController.listOne)
-// POST /doctors > Cadastrar um médico
+routes.get("/doctors/:did", auth(["Admin", "Attendant"]), DoctorController.listOne)
+// POST /doctors > Cadastrar um médico (Uso do admin)
 routes.post("/doctors", auth(["Admin"]), DoctorController.create)
-// PUT /doctors/:id > Atualizar o cadastro de um médico
-routes.put("/doctors", auth(["Admin"]),DoctorController.update)
-// DELETE /doctors/:id > Deletar um médico
-routes.delete("/doctors/:id", auth(["Admin"]), DoctorController.delete)
+// PUT /doctors/:id > Atualizar o cadastro de um médico (Uso do admin)
+routes.put("/doctors/:did", auth(["Admin"]),DoctorController.update)
+// DELETE /doctors/:id > Deletar um médico (Uso do admin)
+routes.delete("/doctors/:did", auth(["Admin"]), DoctorController.delete)
 
 //Cadastro e controle de atendentes
-// GET /attendants > Listar atendentes
+// GET /attendants > Listar atendentes (Uso do admin)
 routes.get("/attendants", auth(["Admin"]), AttendantController.list)
-// GET /clients/:id > Listar um atendente
+// GET /clients/:id > Listar um atendente (Uso do admin)
 routes.get("/attendants/:id", auth(["Admin"]), AttendantController.listOne)
-// POST /clients > Cadastrar um atendente
+// POST /clients > Cadastrar um atendente (Uso do admin)
 routes.post("/attendants", auth(["Admin"]), AttendantController.create)
-// PUT /clients/:id > Atualizar o cadastro de um atendente
+// PUT /clients/:id > Atualizar o cadastro de um atendente (Uso do admin)
 routes.put("/attendants", auth(["Admin"]), AttendantController.update)
-// DELETE /clients/:id > Deletar um atendente
+// DELETE /clients/:id > Deletar um atendente (Uso do admin)
 routes.delete("/attendants/:id", auth(["Admin"]), AttendantController.delete)
-
-// rotas do perfil do usuário logado
-//req.userID
-//GET /profile
-/* Bloco de funcionalidades do sistema */
-
-/*
-//Cadastro e controle de consultas
-//GET /consultas > Listas consultas
-routes.get("/consultas", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.list)
-//GET /consultas/:id > Listar uma consulta
-routes.get("/consultas/:id", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.listOne)
-//POST /consultas > Criar uma consulta
-routes.post("/consultas", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.create)
-//PUT /consultas/:id > Editar uma consulta
-routes.put("/consultas/:id", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.update)
-//DELETE /consultas/:id > Deletar uma consulta
-routes.delete("/consultas/:id", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.delete)
 
 /** rotas - controle de erro */
 routes.use((req,res) => res.sendStatus(404));

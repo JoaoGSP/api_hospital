@@ -18,7 +18,8 @@ export default (arrayOfAuthUsers) => {
         try {
             const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
             req.userID = decode.id;
-
+            req.role = decode.role
+            
             if(arrayOfAuthUsers.indexOf(decode.role) === -1) {
                 return res.status(401).json({
                     error: true,

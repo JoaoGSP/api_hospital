@@ -1,4 +1,5 @@
 import { PacienteModel } from "../models/User.js";
+import * as yup from 'yup'
 
 class ClientController {
     // GET /clients > Listar clientes
@@ -21,12 +22,13 @@ class ClientController {
     // GET /clients/:id > Listar um cliente
     // errors code: 110..119
     async listOne(req, res) {
-        PacienteModel.findOne({ _id: req.params.id }, '_id nome email createAt updateAt').then((client) => {
+        PacienteModel.findOne({_id: req.params.pid }, '_id cpf nome email createAt updateAt').then((client) => {
             return res.json({
                 error: false,
-                client: client
+                client
             });
         }).catch((err) => {
+            console.log(err)
             return res.status(400).json({
                 error: true,
                 code: 110,
@@ -37,6 +39,46 @@ class ClientController {
     // POST /clients > Cadastrar um cliente
     // errors code: 120..129
     async create(req, res) {
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2, "Tamanho inválido"),
+            sexo: yup.string()
+            .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                .min(19100101)
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11, "O campo deve conter 11 digitos"),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8, "O campo deve conter 8 digitos"),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .max(5, "O campo não pode receber mais de 5 digitos"),
+                complemento: yup.string()
+                    .min(3, "Tamanho inválido"),
+                cidade: yup.string()
+                    .min(3, "Tamanho inválido"),
+                estado: yup.string()
+                    .min(2, "Tamanho inválido")
+            }),
+            telefone: yup.string()
+                .length(11, "Tamanho inválido"),            
+            email: yup.string()
+                .email("Insira um email válido no formato: usuario@email.com")
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
+
         const emailExiste = await PacienteModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
@@ -59,9 +101,47 @@ class ClientController {
     // PUT /clients/:id > Atualizar o cadastro de um cliente
     // errors code: 130..139
     async update(req, res) {
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2),
+            sexo: yup.string()
+                .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                //.min()
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .length(5),
+                complemento: yup.string()
+                    .min(3),
+                cidade: yup.string()
+                    .min(3),
+                estado: yup.string()
+                    .min(2)
+            }),
+            telefone: yup.string()
+                .length(11),            
+            email: yup.string()
+                .email()
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
         
-        const clienteExiste = await PacienteModel.findOne({_id: req.params.id});
-
+        const clienteExiste = await PacienteModel.findOne({_id: req.params.pid});
         if(!clienteExiste){
             return res.status(400).json({
                 error: true,
@@ -70,7 +150,7 @@ class ClientController {
             });
         };
 
-        if(req.body.email !== clienteExiste.email){
+        if(req.body.email == clienteExiste.email){
             const emailExiste = await PacienteModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
@@ -81,7 +161,7 @@ class ClientController {
             };
         };
 
-        PacienteModel.updateOne({_id: req.params.id}, client).then(() => {
+        PacienteModel.updateOne({_id: req.params.pid}, req.body).then(() => {
             return res.json({
                 error: false,
                 message: "Cliente editado com sucesso!"
@@ -97,7 +177,7 @@ class ClientController {
     // DELETE /clients/:id > Deletar um cliente
     // errors code: 140..149
     async delete(req, res) {
-        PacienteModel.deleteOne({ _id: req.params.id }).then(() => {
+        PacienteModel.deleteOne({ _id: req.params.pid }).then(() => {
             return res.json({
                 error: false,
                 message: "Cliente apagado com sucesso!"

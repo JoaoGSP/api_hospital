@@ -1,5 +1,6 @@
 import { AtendenteModel } from "../models/User.js";
 import bcrypt from 'bcrypt';
+import * as yup from 'yup';
 
 class AttendantController {
     // GET /attendants > Listar atendentes
@@ -38,6 +39,49 @@ class AttendantController {
     // POST /attendants > Cadastrar um atedente
     // errors code: 120..129
     async create(req, res) {
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2, "Tamanho inválido"),
+            sexo: yup.string()
+                .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                .min(19100101)
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11, "O campo deve conter 11 digitos"),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8, "O campo deve conter 8 digitos"),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .max(5, "O campo não pode receber mais de 5 digitos"),
+                complemento: yup.string()
+                    .min(3, "Tamanho inválido"),
+                cidade: yup.string()
+                    .min(3, "Tamanho inválido"),
+                estado: yup.string()
+                    .min(2, "Tamanho inválido")
+            }),
+            telefone: yup.string()
+                .length(11, "Tamanho inválido"),            
+            email: yup.string()
+                .email("Insira um email válido no formato: usuario@email.com"),
+            senha: yup.string()
+                .matches(/^[0-9]+$/, "A senha deve conter apenas valores numéricos")
+                .length(6, "A senha deve ter exatamente 6 dígitos")
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
+
         const emailExiste = await AtendenteModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
@@ -62,6 +106,49 @@ class AttendantController {
     // PUT /attendants/:id > Atualizar o cadastro de um atendente
     // errors code: 130..139
     async update(req, res) {
+        //Validação dos campos
+        const schema = yup.object().shape({
+            nome: yup.string()
+                .min(2, "Tamanho inválido"),
+            sexo: yup.string()
+            .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
+            data_nasc: yup.date()
+                //.min()
+                //.max()
+                ,
+            cpf: yup.string()
+                .length(11, "O campo deve conter 11 digitos"),
+            endereço: yup.object().shape({
+                cep: yup.string()
+                    .length(8, "O campo deve conter 8 digitos"),
+                logradouro: yup.string(),
+                numero: yup.string()
+                    .max(5, "O campo não pode receber mais de 5 digitos"),
+                complemento: yup.string()
+                    .min(3, "Tamanho inválido"),
+                cidade: yup.string()
+                    .min(3, "Tamanho inválido"),
+                estado: yup.string()
+                    .min(2, "Tamanho inválido")
+            }),
+            telefone: yup.string()
+                .length(11, "Tamanho inválido"),            
+            email: yup.string()
+                .email("Insira um email válido no formato: usuario@email.com"),
+            senha: yup.string()
+                .matches(/^[0-9]+$/, "A senha deve conter apenas valores numéricos")
+                .length(6, "A senha deve ter exatamente 6 dígitos")
+        });
+        try {
+            await schema.validate(req.body);
+        } catch(err) {
+            return res.status(400).json({
+                error: true,
+                code: 120,
+                message: err.message
+            });
+        }
+
         const atendenteExiste = await AtendenteModel.findOne({_id: req.params.id});
 
         if(!atendenteExiste){
@@ -72,7 +159,7 @@ class AttendantController {
             });
         };
 
-        if(req.body.email !== atendenteExiste.email){
+        if(req.body.email == atendenteExiste.email){
             const emailExiste = await Client.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
