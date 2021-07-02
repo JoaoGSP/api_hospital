@@ -1,4 +1,4 @@
-import { PacienteModel } from "../models/User.js";
+import UserModel, { PacienteModel } from "../models/User.js";
 import * as yup from 'yup'
 
 class ClientController {
@@ -79,7 +79,7 @@ class ClientController {
             });
         }
 
-        const emailExiste = await PacienteModel.findOne({ email: req.body.email });
+        const emailExiste = await UserModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,
@@ -108,7 +108,7 @@ class ClientController {
             sexo: yup.string()
                 .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
-                //.min()
+                .min(19100101)
                 //.max()
                 ,
             cpf: yup.string()
@@ -151,7 +151,7 @@ class ClientController {
         };
 
         if(req.body.email == clienteExiste.email){
-            const emailExiste = await PacienteModel.findOne({email: req.body.email});
+            const emailExiste = await UserModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
                     error: true,

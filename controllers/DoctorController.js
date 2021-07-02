@@ -85,7 +85,7 @@ class DoctorController {
             });
         }
 
-        const emailExiste = await MedicoModel.findOne({ email: req.body.email });
+        const emailExiste = await UserModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,

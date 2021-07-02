@@ -57,6 +57,7 @@ const UserModel = mongoose.model('User', UserSchema);
 UserModel.discriminator('Admin', new mongoose.Schema({ senha: String }));
 
 export const MedicoModel = UserModel.discriminator('Doctor', new mongoose.Schema({
+  consultas: {type: mongoose.Schema.Types.ObjectId, ref: "Consultas" },
   numCRM: {
     type: Number,
     required: false
@@ -78,6 +79,8 @@ export const AtendenteModel = UserModel.discriminator('Attendant', new mongoose.
   }
 }));
 
-export const PacienteModel = UserModel.discriminator('Client', new mongoose.Schema({}));
+export const PacienteModel = UserModel.discriminator('Client', new mongoose.Schema({
+  consultas: {type: mongoose.Schema.Types.ObjectId, ref: "Consultas"}
+}));
 
 export default UserModel;

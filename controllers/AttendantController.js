@@ -1,4 +1,4 @@
-import { AtendenteModel } from "../models/User.js";
+import UserModel, { AtendenteModel } from "../models/User.js";
 import bcrypt from 'bcrypt';
 import * as yup from 'yup';
 
@@ -82,7 +82,7 @@ class AttendantController {
             });
         }
 
-        const emailExiste = await AtendenteModel.findOne({ email: req.body.email });
+        const emailExiste = await UserModel.findOne({ email: req.body.email });
         if (emailExiste) {
             return res.status(400).json({
                 error: true,
@@ -113,7 +113,7 @@ class AttendantController {
             sexo: yup.string()
             .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
-                //.min()
+                .min(19100101)
                 //.max()
                 ,
             cpf: yup.string()
@@ -160,7 +160,7 @@ class AttendantController {
         };
 
         if(req.body.email == atendenteExiste.email){
-            const emailExiste = await Client.findOne({email: req.body.email});
+            const emailExiste = await UserModel.findOne({email: req.body.email});
             if(emailExiste){
                 return res.status(400).json({
                     error: true,
