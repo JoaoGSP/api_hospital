@@ -3,15 +3,11 @@ import * as yup from 'yup'
 
 class ClientController {
     // GET /clients > Listar clientes
-    // errors code: 100..109
     async list(req, res) {
         // consultar no banco os clientes
-        PacienteModel.find({}).select("-senha").then((clients) => {
-            return res.json({
-                error: false,
-                clients: clients
-            });
-        }).catch((error) => {
+        PacienteModel.find({}).then((clients) => {
+            return res.json({ error: false, clients });
+        }).catch((err) => {
             return res.status(400).json({
                 error: true,
                 code: 100,
@@ -20,9 +16,8 @@ class ClientController {
         });
         }
     // GET /clients/:id > Listar um cliente
-    // errors code: 110..119
     async listOne(req, res) {
-        PacienteModel.findOne({_id: req.params.pid }, '_id cpf nome email createAt updateAt').then((client) => {
+        PacienteModel.findOne({_id: req.params.pid }, '_id cpf nome email sexo createAt updateAt').then((client) => {
             return res.json({
                 error: false,
                 client
@@ -39,6 +34,9 @@ class ClientController {
     // POST /clients > Cadastrar um cliente
     // errors code: 120..129
     async create(req, res) {
+        //Garantir que não seja inserida uma data de nascimento inválida
+        const today = new Date();
+        today.setHours(0, 0, 0, 0)       
         //Validação dos campos
         const schema = yup.object().shape({
             nome: yup.string()
@@ -47,8 +45,7 @@ class ClientController {
             .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
                 .min(19100101)
-                //.max()
-                ,
+                .max(today),
             cpf: yup.string()
                 .length(11, "O campo deve conter 11 digitos"),
             endereço: yup.object().shape({
@@ -99,7 +96,6 @@ class ClientController {
         });
     }
     // PUT /clients/:id > Atualizar o cadastro de um cliente
-    // errors code: 130..139
     async update(req, res) {
         //Validação dos campos
         const schema = yup.object().shape({
@@ -109,8 +105,7 @@ class ClientController {
                 .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
                 .min(19100101)
-                //.max()
-                ,
+                .max(today),
             cpf: yup.string()
                 .length(11),
             endereço: yup.object().shape({
@@ -175,7 +170,6 @@ class ClientController {
         });
     }
     // DELETE /clients/:id > Deletar um cliente
-    // errors code: 140..149
     async delete(req, res) {
         PacienteModel.deleteOne({ _id: req.params.pid }).then(() => {
             return res.json({

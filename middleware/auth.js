@@ -20,7 +20,7 @@ export default (arrayOfAuthUsers) => {
             req.userID = decode.id;
             req.role = decode.role
             
-            if(arrayOfAuthUsers.indexOf(decode.role) === -1) {
+            if(arrayOfAuthUsers.indexOf(req.role) === -1) {
                 return res.status(401).json({
                     error: true,
                     message: "Usuário não autorizado!"

@@ -1,49 +1,39 @@
 import * as yup from 'yup';
-import jwt from 'jsonwebtoken';
 import Consulta from "../models/hospitalConsultation.js";
-import {promisify} from "util";
 
 class ConsultationController {
     // GET /consultas > Listar consultas
     async list(req, res) {
-        let medico ;
-        if(req.role === "Doctor"){
-            medico = req.userID
-        }
-        Consulta.find({}).populate("paciente").populate({path: "medico", select: "-senha"}).then(consultas => {
-            return res.status(200).json({
-                error: false,
-                consultas
-            })
-        })
-        /*Consulta.find({}).then((consultas)=> { // sucesso
-            res.json({ // status 200 ok
-                error: false,
-                consultas
-            })
-        })*/.catch((err) => {
+        await Consulta.find({}).then(consultas => {
+                return res.status(200).json({ error: false, consultas })
+        }).catch((err) => {
             return res.status(400).json({
                 error: true,
                 code:100,
                 message: "Erro: nao foi possivel executar solicitação"
             })
         });
-    }//Metodo find OK
+    }
     // GET /consultas/:id > Listar uma consulta
     async listOne(req,res) {
-        Consulta.findById({_id : req.params.cid}).then((consulta)=>{
-            res.status(200).json({
-                error: false,
-                consulta
-            })
+        await Consulta.findById({_id : req.params.cid}).then((consulta)=>{
+                
+                if(consulta.medico != req.userID){ //Garantir que o médico só consiga acessar as suas próprias consultas
+                    if(req.role !== 'Attendant'){
+                        return res.status(403).json({error: true, message: "Usuário não autorizado a executar a solicitação!"})
+                    }
+                }
+
+                return res.status(200).json({error: false, consulta})
         }).catch((err)=>{
+            console.log(err)
                 res.status(400).json({
                     error: true,
                     code: 101,
                     message: 'Não foi possivel executar a solicitação'
                 })
             })
-    }// FindOne OK
+    }
     //POST /consulta
     async create(req, res) {
         const schema = yup.object().shape({
@@ -67,7 +57,7 @@ class ConsultationController {
         req.body.medico = req.userID
 
         Consulta.create(req.body).then((consulta) => {
-        return res.json(consulta)
+        return res.status(400).json({error: false, consulta})
         }).catch((err) => {
             return res.status(400).json({
                 error: true,
@@ -104,7 +94,7 @@ class ConsultationController {
                 message: 'A consulta não foi editada com sucesso'
             })
         })      
-    }//Update OK
+    }
     // DELETE /consultas/:cid
     async delete(req, res) {
        Consulta.deleteOne({ _id: req.params.cid }).then(() => {
@@ -121,6 +111,6 @@ class ConsultationController {
            })
        })      
     }
-}//Delete ok
+}
 
 export default new ConsultationController();

@@ -2,9 +2,9 @@ import UserModel, { AtendenteModel } from "../models/User.js";
 import bcrypt from 'bcrypt';
 import * as yup from 'yup';
 
+
 class AttendantController {
     // GET /attendants > Listar atendentes
-    // errors code: 100..109
     async list(req, res) {
         // consultar no banco os clientes
         AtendenteModel.find({}).select("-senha").then((attendants) => {
@@ -39,6 +39,9 @@ class AttendantController {
     // POST /attendants > Cadastrar um atedente
     // errors code: 120..129
     async create(req, res) {
+        //Garantir que não seja inserida uma data de nascimento inválida
+        const today = new Date();
+        today.setHours(0, 0, 0, 0)
         //Validação dos campos
         const schema = yup.object().shape({
             nome: yup.string()
@@ -47,8 +50,7 @@ class AttendantController {
                 .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
                 .min(19100101)
-                //.max()
-                ,
+                .max(today),
             cpf: yup.string()
                 .length(11, "O campo deve conter 11 digitos"),
             endereço: yup.object().shape({
@@ -104,7 +106,6 @@ class AttendantController {
         });
     }
     // PUT /attendants/:id > Atualizar o cadastro de um atendente
-    // errors code: 130..139
     async update(req, res) {
         //Validação dos campos
         const schema = yup.object().shape({
@@ -114,8 +115,7 @@ class AttendantController {
             .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
                 .min(19100101)
-                //.max()
-                ,
+                .max(today),
             cpf: yup.string()
                 .length(11, "O campo deve conter 11 digitos"),
             endereço: yup.object().shape({
@@ -188,7 +188,6 @@ class AttendantController {
         });
     }
     // DELETE /attendants/:id > Deletar um atendente
-    // errors code: 140..149
     async delete(req, res) {
         AtendenteModel.deleteOne({ _id: req.params.id }).then(() => {
             return res.json({

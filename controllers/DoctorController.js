@@ -46,9 +46,8 @@ class DoctorController {
             sexo: yup.string()
                 .oneOf(["masculino","feminino","outro"], "Opções: masculino|feminino|outro"),
             data_nasc: yup.date()
-                //.min()
-                //.max()
-                ,
+                .min(19100101)
+                .max(),
             cpf: yup.string()
                 .length(11, "O campo deve conter 11 digitos"),
             endereço: yup.object().shape({

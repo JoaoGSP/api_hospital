@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 import User from "../models/User.js";
 
 class LoginController {
-   /* code 150 .. 159 */
     async login(req, res) {
         const { email, senha } = req.body;
 

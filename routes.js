@@ -9,7 +9,8 @@ import LoginController from "./controllers/LoginController.js";
 import ConsultationController from "./controllers/ConsultationController.js";
 import ProfileController from "./controllers/ProfileController.js";
 
-import UserModel from "./models/User.js";
+// import Consultation from "./controllers/ConsultationController.js"
+// import UserModel from "./models/User.js";
 import auth from "./middleware/auth.js";
 
 const routes = new Router();
@@ -26,59 +27,19 @@ routes.get("/", async (req, res) => {
 //Login no Sistema
 routes.post("/login", LoginController.login);
 
-//Listar todos os úsuarios cadastrados no sistema (Uso do Admin)
-routes.get("/users", auth(["Admin"]), async (req, res) => {
-    
-    const {_id, _role, nome, sexo, data_nasc, cpf} = req.query;
-
-    UserModel.find(JSON.parse(JSON.stringify({_id, _role, nome, sexo, data_nasc, cpf}))).then((users)=>{
-        res.json({users})
-    });
-})
-
-routes.get("/users/:id", async (req, res)=>{
-    try{
-        const user = await UserModel.findById(req.params.id)
-        user.set(req.body)
-        await user.save()
-
-        await UserModel.updateOne({_id: req.params.id}, req.body, {runValidators: true})
-        res.status(200).json({erro:false, message:"Usuário atualizado!"})
-    }catch(err){
-        if (err.name === "ValidationError") {
-            return res.status(400).json({
-                error: true,
-                message: err.message,
-                ValidationError: err.errors
-            });
-        }
-
-        return res.status(400).json({
-            error: true,
-            message: "Erro ao executar a solitação!"
-        });
-    }
-})
-
 //Rotas de acesso do perfil
-routes.get('/profile', auth(["Doctor"]), ProfileController.list);
-//editar usuário logado\
-routes.put('/profile', auth(["Doctor"]), ProfileController.update);
-//deletar usuário logado 
-routes.delete('/profile', auth(["Doctor"]), ProfileController.delete);
-
+routes.get('/profile', auth(["Doctor", "Attendant", "Admin"]), ProfileController.list);
+//Editar usuário logado\
+routes.put('/profile', auth(["Doctor", "Attendant", "Admin"]), ProfileController.update);
+//Deletar usuário logado 
+routes.delete('/profile', auth(["Doctor", "Attendant", "Admin"]), ProfileController.delete);
 //Listar todas as consultas do médico logado
 routes.get('/profile/consultas', auth(["Doctor"]), ProfileController.listConsultas);
 
-//Listar uma consulta *Verficar a rudundancia das rotas abaixo...*
-//routes.get('/profile/produtos/:product_id', authorize(), ProfileController.listOneProduct);
-//routes.put('/profile/produtos/:product_id', authorize(), ProfileController.updateProduct);
-//routes.delete('/profile/produtos/:product_id', authorize(), ProfileController.deleteProduct);
-
-//Listar todas as consultas
+//Listar todas as consultas (De maneira genérica)
 routes.get("/consultas", auth(["Admin", "Attendant"]), ConsultationController.list);
-//listar uma consulta
-routes.get("/consultas/:cid", auth(["Admin", "Attendant"]), ConsultationController.listOne);
+//Listar uma consulta
+routes.get("/consultas/:cid", auth(["Admin", "Attendant", "Doctor"]), ConsultationController.listOne);
 //Criação de consultas pelo médico
 routes.post("/consultas", auth(["Doctor"]), ConsultationController.create);
 //Edição de consultas pelo atendente/médico
