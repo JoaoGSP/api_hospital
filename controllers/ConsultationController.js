@@ -3,6 +3,7 @@ import Consulta from "../models/hospitalConsultation.js";
 
 class ConsultationController {
     // GET /consultas > Listar consultas
+    // O médico aqui consegue listar todas as consultas de todos os demais médicos.
     async list(req, res) {
         await Consulta.find({}).then(consultas => {
                 return res.status(200).json({ error: false, consultas })
@@ -17,7 +18,10 @@ class ConsultationController {
     // GET /consultas/:id > Listar uma consulta
     async listOne(req,res) {
         await Consulta.findById({_id : req.params.cid}).then((consulta)=>{
-                
+                /*
+                * 1. se o userID for de 'Admin', primeira condição é verdadeiro, segunda também e o admin não será autorizado a listar.
+                * O que você fez foi: se usuário não é médico e não for atendente -> não é autorizado.
+                */
                 if(consulta.medico != req.userID){ //Garantir que o médico só consiga acessar as suas próprias consultas
                     if(req.role !== 'Attendant'){
                         return res.status(403).json({error: true, message: "Usuário não autorizado a executar a solicitação!"})
@@ -82,6 +86,7 @@ class ConsultationController {
                 message: err.message
             });
         }
+        // Faltou serpara as restrições do que cada um pode ou não pode editar (entre o médico e o atendente)
         Consulta.updateOne({ _id: req.params.cid }, req.body).then(() => {
             return res.json({
                 error: false,
@@ -97,6 +102,7 @@ class ConsultationController {
     }
     // DELETE /consultas/:cid
     async delete(req, res) {
+       // E se o médico decidir excluir um horário que disponibilizou do qual ainda está disponível, mas não ocupada?
        Consulta.deleteOne({ _id: req.params.cid }).then(() => {
            return res.json({
                error: false,
